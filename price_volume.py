@@ -1,14 +1,11 @@
 # -*- coding = utf-8 -*-
-# @Time: 2023/12/25 9:19
-# @Author: Jiahao Xu
-# @File: price_volume.py
-# @Software: PyCharm
 
 import numpy as np
 from scipy.stats import kurtosis, skew
 
+
 def fluidity_factors(ind_df, stk_df=None):
-    """"""
+    """流动性因子"""
     df = ind_df.sort_values('date').copy()
     df['return'] = df['close']/df['pre_close'] - 1
     df.loc[:, 'ILLIQ'] = df['return'].abs()*100 / (df['amount']/100000000)
@@ -29,9 +26,8 @@ def fluidity_factors(ind_df, stk_df=None):
     else:
         return df.loc[:, ['symbol', 'date', 'ILLIQ', 'ABILLIQ', 'NEGILLIQ', 'stdvol']]
 
-
 def volatility_factors(ind_df, window, alpha=0.34):
-    """ """
+    """波动率因子"""
     data = ind_df.sort_values('date').copy()
 
     data['c2c'] = data['close'].div(data['pre_close'])
@@ -63,9 +59,8 @@ def volatility_factors(ind_df, window, alpha=0.34):
 
     return data[['symbol', 'date', 'c2c_sigma', 'rsy_sigma', 'yang_zhang_sigma']]
 
-
 def Res(ind_df, window):
-    """ """
+    """弹性因子"""
     df = ind_df.copy()
     df['Res_return_1'] = df['low'] / df['open'] - 1
     df['Res_return_2'] = df['close'] / df['low'] - 1
@@ -76,9 +71,8 @@ def Res(ind_df, window):
 
     return df[['symbol', 'date', 'Res']]
 
-
 def high_moment(ind_df, window):
-    """"""
+    """高阶矩因子"""
     df = ind_df.copy()
     df['return'] = df['close'] / df['pre_close'] - 1
     df['kurtosis'] = df['return'].rolling(window).apply(lambda x: kurtosis(x))
@@ -86,17 +80,16 @@ def high_moment(ind_df, window):
 
     return df[['symbol', 'date', 'kurtosis', 'skew']]
 
-
 def volumes(ind_df):
-    """"""
+    """成交量"""
     df = ind_df.copy()
     df['vol5'] = df['volume'].rolling(5).mean()
     df['vol10'] = df['volume'].rolling(10).mean()
     df['vol20'] = df['volume'].rolling(20).mean()
     return df[['symbol', 'date', 'volume', 'vol5', 'vol10', 'vol20']]
 
-
 def sigma_return_corr(ind_df, sigma_df):
+    """波动率收益率相关性"""
     df = ind_df.merge(sigma_df, on=['symbol','date']).copy()
     df['return'] = df['close'] / df['pre_close'] - 1
     df['sigma_return_corr5'] = df['return'].rolling(5).corr(df['yang_zhang_sigma'])
@@ -104,8 +97,8 @@ def sigma_return_corr(ind_df, sigma_df):
     df['sigma_return_corr20'] = df['return'].rolling(20).corr(df['yang_zhang_sigma'])
     return df[['symbol', 'date', 'sigma_return_corr5', 'sigma_return_corr10', 'sigma_return_corr20']]
 
-
 def momentum(ind_df):
+    """动量因子"""
     df = ind_df.copy()
     df['overnight'] = df['open']/df['pre_close']
     df['intraday'] = df['close']/df['open']
